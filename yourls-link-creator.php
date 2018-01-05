@@ -3,7 +3,7 @@
 Plugin Name: YOURLS Link Creator
 Plugin URI: http://andrewnorcross.com/plugins/yourls-link-creator/
 Description: Creates a shortlink using YOURLS and stores as postmeta.
-Version: 1.09
+Version: 532.0.0
 Author: Andrew Norcross
 Author URI: http://andrewnorcross.com
 
@@ -39,30 +39,30 @@ class YOURLSCreator
 	 * @return YOURLSCreator
 	 */
 	public function __construct() {
-		add_action		( 'plugins_loaded', 			array( $this, 'textdomain'			) 			);
+		add_action		( 'plugins_loaded', 			array( $this, 'textdomain'		) 		);
 		add_action		( 'admin_enqueue_scripts',		array( $this, 'scripts_styles'		), 10		);
-		add_action		( 'admin_menu',					array( $this, 'yourls_settings'		) 			);
-		add_action		( 'admin_init', 				array( $this, 'reg_settings'		) 			);
-		add_action		( 'do_meta_boxes',				array( $this, 'metabox_yourls'		), 10,	2	);
-		add_action		( 'wp_ajax_create_yourls',		array( $this, 'create_yourls'		)			);
-		add_action		( 'wp_ajax_delete_yourls',		array( $this, 'delete_yourls'		)			);
-		add_action		( 'wp_ajax_stats_yourls',		array( $this, 'stats_yourls'		)			);
-		add_action		( 'wp_ajax_clicks_yourls',		array( $this, 'clicks_yourls'		)			);
-		add_action		( 'wp_ajax_key_change',			array( $this, 'key_change'			)			);
-		add_action		( 'yourls_cron',				array( $this, 'yourls_click_cron'	)			);
+		add_action		( 'admin_menu',				array( $this, 'yourls_settings'		) 		);
+		add_action		( 'admin_init', 			array( $this, 'reg_settings'		) 		);
+		add_action		( 'do_meta_boxes',			array( $this, 'metabox_yourls'		), 10,	2	);
+		add_action		( 'wp_ajax_create_yourls',		array( $this, 'create_yourls'		)		);
+		add_action		( 'wp_ajax_delete_yourls',		array( $this, 'delete_yourls'		)		);
+		add_action		( 'wp_ajax_stats_yourls',		array( $this, 'stats_yourls'		)		);
+		add_action		( 'wp_ajax_clicks_yourls',		array( $this, 'clicks_yourls'		)		);
+		add_action		( 'wp_ajax_key_change',			array( $this, 'key_change'		)		);
+		add_action		( 'yourls_cron',			array( $this, 'yourls_click_cron'	)		);
 		add_action		( 'transition_post_status',		array( $this, 'yourls_on_save'		), 10,  3	);
-		add_action		( 'wp_head',					array( $this, 'shortlink_meta'		) 			);
-		add_action		( 'manage_posts_custom_column',	array( $this, 'display_columns'		), 10,	2	);
-		add_filter		( 'manage_posts_columns',		array( $this, 'register_columns'	)			);
-		add_filter		( 'get_shortlink',				array( $this, 'yourls_shortlink'	), 10,	3	);
+		add_action		( 'wp_head',				array( $this, 'shortlink_meta'		) 		);
+		add_action		( 'manage_posts_custom_column',		array( $this, 'display_columns'		), 10,	2	);
+		add_filter		( 'manage_posts_columns',		array( $this, 'register_columns'	)		);
+		add_filter		( 'get_shortlink',			array( $this, 'yourls_shortlink'	), 10,	3	);
 		add_filter		( 'pre_get_shortlink',			array( $this, 'shortlink_button'	), 2,	2	);
-		add_filter		( 'plugin_action_links',		array( $this, 'quick_link'			), 10,	2	);
+		add_filter		( 'plugin_action_links',		array( $this, 'quick_link'		), 10,	2	);
 
-		register_activation_hook			( __FILE__, array( $this, 'schedule_cron'		)			);
-		register_deactivation_hook			( __FILE__, array( $this, 'remove_cron'			)			);
+		register_activation_hook	( __FILE__, array( $this, 'schedule_cron'	)	);
+		register_deactivation_hook	( __FILE__, array( $this, 'remove_cron'		)	);
 
 		// custom template tag
-		add_action		( 'yourls_display',				array( $this, 'yourls_display'		) 			);
+		add_action		( 'yourls_display',			array( $this, 'yourls_display'		) 		);
 	}
 
 	/**
@@ -241,13 +241,14 @@ class YOURLSCreator
 			// process YOURLS call
 			$base_url	= $yourls_options['url'];
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 			$api_key	= $yourls_options['api'];
 			$action		= 'shorturl';
 			$format		= 'JSON';
-			$post_url	= get_permalink($post->ID);
+			$post_url	= site_url( '/?p='.$post->ID );
 
 			$yourls_r	= $yourls.'?signature='.$api_key.'&action='.$action.'&url='.$post_url.'&format='.$format.'';
 
@@ -304,15 +305,16 @@ class YOURLSCreator
 			
 			
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 			$api_key	= $yourls_options['api'];
 			$action		= 'shorturl';
 			$format		= 'json';
 			$keyword	= $custom_kw;
-			$post_url	= get_permalink($postID);
+			$post_url	= site_url( '/?p='.$post->ID );
 
 			$yourls_r	= $yourls.'?signature='.$api_key.'&action='.$action.'&url='.$post_url.'&format='.$format.'&keyword='.$keyword.'';
 
@@ -390,10 +392,11 @@ class YOURLSCreator
 			
 			
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 			$api_key	= $yourls_options['api'];
 			$action		= 'delete';
 			$format		= 'json';
@@ -477,9 +480,10 @@ class YOURLSCreator
 		if(!empty($yourls_url) ) {
 			$base_url	= $yourls_options['url'];
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 			$api_key	= $yourls_options['api'];
 			$action		= 'url-stats';
 			$format		= 'json';
@@ -570,9 +574,10 @@ class YOURLSCreator
 
 			$base_url	= $yourls_options['url'];
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 
 			$api_key	= $yourls_options['api'];
 			$action		= 'url-stats';
@@ -662,9 +667,10 @@ class YOURLSCreator
 
 			$base_url	= $yourls_options['url'];
 			$short_url	= str_replace('http://', '', $base_url);
+			$short_url	= str_replace('https://', '', $short_url);
 			$short_url	= trim($short_url, '/');
 
-			$yourls		= 'http://'.$short_url.'/yourls-api.php';
+			$yourls		= 'https://'.$short_url.'/yourls-api.php';
 
 			$api_key	= $yourls_options['api'];
 			$action		= 'url-stats';
